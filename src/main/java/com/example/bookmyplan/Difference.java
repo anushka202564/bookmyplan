@@ -63,14 +63,7 @@ public class Difference {
 			}
 		}
 	    return count;
-		/*System.out.println(set);
-		System.out.println("Elements which are there in set 1 but not in set 2: ");
-		for(int y : a)
-		{
-			System.out.println(a[y]);
-		}
-		
-		return a.length;*/
+
 		
 		
 	}
@@ -103,3 +96,4 @@ public class Difference {
 	}
 
 }
+
