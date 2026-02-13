@@ -36,5 +36,10 @@ pipeline {
                 echo "Artifact created: bookmyplan-1.1.${BUILD_NUMBER}.jar"
             }
         }
+
+        stage('Archive Artifact') {
+            steps {
+                archiveArtifacts artifacts: 'target/bookmyplan-*.jar', fingerprint: true
+            }
     }
 }
