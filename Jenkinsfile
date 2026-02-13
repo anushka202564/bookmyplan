@@ -41,5 +41,6 @@ pipeline {
             steps {
                 archiveArtifacts artifacts: 'target/bookmyplan-*.jar', fingerprint: true
             }
+        }
     }
 }
