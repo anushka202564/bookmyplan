@@ -34,15 +34,12 @@ pipeline {
 
         stage('Code Package') {
             steps {
-                echo 'Creating JAR Artifact...'
                 sh 'mvn package'
-
                 sh """
-                cp target/*.jar \
-                target/bookmyplan-1.1.${BUILD_NUMBER}.jar
+                cp target/*.jar target/bookmyplan-${BRANCH_NAME}-${BUILD_NUMBER}.jar
                 """
-
-                echo "Artifact created: bookmyplan-1.1.${BUILD_NUMBER}.jar"
+            
+                echo "Artifact created: bookmyplan-1.1.${BRANCH_NAME}-${BUILD_NUMBER}.jar"
             }
         }
 
