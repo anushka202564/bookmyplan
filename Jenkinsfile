@@ -1,6 +1,15 @@
 pipeline {
     agent any
 
+    options {
+        buildDiscarder(
+            logRotator(
+                numToKeepStr: '5',
+                artifactNumToKeepStr: '5'
+            )
+        )
+    }
+    
     tools {
         maven 'mvn-3.9.12'
     }
