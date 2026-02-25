@@ -112,7 +112,7 @@ pipeline {
                      sh 'mvn sonar:sonar'
                  }
                  echo 'SonarQube Scan Completed. Checking Quality Gate...'
-                 timeout(time: 10, unit: 'MINUTES') {
+                 timeout(time: 3, unit: 'MINUTES') {
                      waitForQualityGate abortPipeline: true
                  }
                  echo 'Quality Gate Check Completed!'
