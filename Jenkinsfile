@@ -106,17 +106,23 @@ pipeline {
              environment {
                  scannerHome = tool 'qube'
              }
-             steps {
-                 echo 'Starting SonarQube Code Quality Scan...'
-                 withSonarQubeEnv('sonar-server') {
-                     sh 'mvn sonar:sonar'
-                 }
-                 echo 'SonarQube Scan Completed. Checking Quality Gate...'
-                 timeout(time: 3, unit: 'MINUTES') {
-                     waitForQualityGate abortPipeline: true
-                 }
-                 echo 'Quality Gate Check Completed!'
-             }
+              steps {
+                // Navigate to the project directory where pom.xml exists
+                dir('bookmyplan') {  // Replace with your actual project folder name
+                    echo "Running SonarQube scan in: ${pwd()}"
+            
+                    // Use the SonarQube environment configured in Jenkins
+                    withSonarQubeEnv('sonar-server') {
+                        // Run Maven clean, build, and Sonar scan
+                        sh 'mvn clean install sonar:sonar'
+                    }
+
+                    // Wait for the SonarQube Quality Gate result
+                    timeout(time: 10, unit: 'MINUTES') {
+                        waitForQualityGate abortPipeline: true
+                    }
+                }
+            }
         }
 
         stage('Clean Up Local Docker Images') {
