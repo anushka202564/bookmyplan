@@ -45,6 +45,23 @@ pipeline {
             }
         }
 
+        stage('SonarQube Code Quality') {
+             environment {
+                 scannerHome = tool 'qube'
+             }
+             steps {
+                 echo 'Starting SonarQube Code Quality Scan...'
+                 withSonarQubeEnv('sonar-server') {
+                     sh 'mvn sonar:sonar'
+                 }
+                 echo 'SonarQube Scan Completed. Checking Quality Gate...'
+                 timeout(time: 10, unit: 'MINUTES') {
+                     waitForQualityGate abortPipeline: true
+                 }
+                 echo 'Quality Gate Check Completed!'
+             }
+        }
+
          stage('Build & Tag Docker Image') {
             steps {
                 echo 'Building Docker Image and Tagging...'
@@ -99,37 +116,6 @@ pipeline {
                         echo "Push Docker Image to Nexus : Completed"
                     }
                 }
-            }
-        }
-
-        stage('SonarQube Code Quality') {
-            environment {
-                scannerHome = tool 'qube'
-            }
-            steps {
-                script {
-                    echo "Starting SonarQube Code Quality Scan..."
-
-            // Navigate to the project directory dynamically
-                    def projectDir = "${env.WORKSPACE}/${build_name}" // replace build_name with your variable
-
-                    withSonarQubeEnv('sonar-server') {
-                    sh """
-                        cd ${projectDir}
-                        mvn clean sonar:sonar \
-                        -Dsonar.host.url=http://13.233.33.7:9000 \
-                        -Dsonar.login=${SONAR_AUTH_TOKEN}
-                    """
-                    }
-
-                    echo 'SonarQube Scan Completed. Checking Quality Gate...'
-
-                    timeout(time: 20, unit: 'MINUTES') { // increase timeout if needed
-                        waitForQualityGate abortPipeline: true
-                    }
-
-                    echo 'Quality Gate Check Completed!'
-                }    
             }
         }
 
