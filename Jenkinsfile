@@ -107,16 +107,29 @@ pipeline {
                 scannerHome = tool 'qube'
             }
             steps {
-                echo 'Starting SonarQube Code Quality Scan...'
-                withSonarQubeEnv('sonar-server') {
-                    // Run Maven from the workspace where pom.xml exists
-                    sh 'mvn clean install sonar:sonar'
-                }
-                echo 'SonarQube Scan Completed. Checking Quality Gate...'
-                timeout(time: 3, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-                echo 'Quality Gate Check Completed!'
+                script {
+                    echo "Starting SonarQube Code Quality Scan..."
+
+            // Navigate to the project directory dynamically
+                    def projectDir = "${env.WORKSPACE}/${build_name}" // replace build_name with your variable
+
+                    withSonarQubeEnv('sonar-server') {
+                    sh """
+                        cd ${projectDir}
+                        mvn clean sonar:sonar \
+                        -Dsonar.host.url=http://13.233.33.7:9000 \
+                        -Dsonar.login=${SONAR_AUTH_TOKEN}
+                    """
+                    }
+
+                    echo 'SonarQube Scan Completed. Checking Quality Gate...'
+
+                    timeout(time: 20, unit: 'MINUTES') { // increase timeout if needed
+                        waitForQualityGate abortPipeline: true
+                    }
+
+                    echo 'Quality Gate Check Completed!'
+                }    
             }
         }
 
