@@ -50,32 +50,27 @@ pipeline {
                  scannerHome = tool 'qube'
              }
              steps {
-                script {
-                    echo "Starting SonarQube Code Quality Scan..."
-            
-                    // Use the SonarQube server defined in Jenkins
+                echo "Starting SonarQube Code Quality Scan..."
+                dir("${env.WORKSPACE}") { // use the actual workspace path
+                // Ensure mvnw is executable inside the Jenkins workspace
+                    sh 'chmod +x mvnw'
+
+                    // Run SonarQube analysis
                     withSonarQubeEnv('sonar-server') {
-                
-                        // Run Maven in the directory where pom.xml exists
-                        dir("${env.WORKSPACE}") {
-                    
-                        // Using Maven Wrapper (mvnw) if available
-                            sh './mvnw clean verify sonar:sonar \
-                                -Dsonar.projectKey=bookmyplan \
-                                -Dsonar.host.url=${SONAR_HOST_URL} \
-                                -Dsonar.login=${SONAR_AUTH_TOKEN}'
-                        }
-                    }
-            
-                    echo "SonarQube Scan Completed. Checking Quality Gate..."
-            
-                    // Wait for SonarQube Quality Gate (timeout 10 min)
-                    timeout(time: 10, unit: 'MINUTES') {
-                        waitForQualityGate abortPipeline: true
+                        sh './mvnw clean verify sonar:sonar ' +
+                           "-Dsonar.projectKey=bookmyplan " +
+                           "-Dsonar.host.url=${SONAR_HOST_URL} " +
+                           "-Dsonar.login=${SONAR_AUTH_TOKEN}"
                     }
                 }
-            }
+
+                // Wait for Quality Gate
+                timeout(time: 10, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }    
         }
+
 
          stage('Build & Tag Docker Image') {
             steps {
