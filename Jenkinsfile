@@ -50,16 +50,31 @@ pipeline {
                  scannerHome = tool 'qube'
              }
              steps {
-                 echo 'Starting SonarQube Code Quality Scan...'
-                 withSonarQubeEnv('sonar-server') {
-                     sh 'mvn sonar:sonar'
-                 }
-                 echo 'SonarQube Scan Completed. Checking Quality Gate...'
-                 timeout(time: 10, unit: 'MINUTES') {
-                     waitForQualityGate abortPipeline: true
-                 }
-                 echo 'Quality Gate Check Completed!'
-             }
+                script {
+                    echo "Starting SonarQube Code Quality Scan..."
+            
+                    // Use the SonarQube server defined in Jenkins
+                    withSonarQubeEnv('sonar-server') {
+                
+                        // Run Maven in the directory where pom.xml exists
+                        dir("${env.WORKSPACE}") {
+                    
+                        // Using Maven Wrapper (mvnw) if available
+                            sh './mvnw clean verify sonar:sonar \
+                                -Dsonar.projectKey=bookmyplan \
+                                -Dsonar.host.url=${SONAR_HOST_URL} \
+                                -Dsonar.login=${SONAR_AUTH_TOKEN}'
+                        }
+                    }
+            
+                    echo "SonarQube Scan Completed. Checking Quality Gate..."
+            
+                    // Wait for SonarQube Quality Gate (timeout 10 min)
+                    timeout(time: 10, unit: 'MINUTES') {
+                        waitForQualityGate abortPipeline: true
+                    }
+                }
+            }
         }
 
          stage('Build & Tag Docker Image') {
