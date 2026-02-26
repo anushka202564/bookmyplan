@@ -50,25 +50,28 @@ pipeline {
                  scannerHome = tool 'qube'
              }
              steps {
-                echo "Starting SonarQube Code Quality Scan..."
-                dir("${env.WORKSPACE}") { // use the actual workspace path
-                // Ensure mvnw is executable inside the Jenkins workspace
-                    sh 'chmod +x mvnw'
+                script {
+                    withSonarQubeEnv('sonar-server') { // Name of your SonarQube server in Jenkins
+                        dir("${env.WORKSPACE}") {        // Ensure you run in the workspace where pom.xml exists
+                            // Make sure mvnw is executable
+                            sh 'chmod +x ./mvnw'
 
-                    // Run SonarQube analysis
-                    withSonarQubeEnv('sonar-server') {
-                        sh './mvnw clean verify sonar:sonar ' +
-                           "-Dsonar.projectKey=bookmyplan " +
-                           "-Dsonar.host.url=${SONAR_HOST_URL} " +
-                           "-Dsonar.login=${SONAR_AUTH_TOKEN}"
+                            // Run SonarQube scan using the proper projectKey
+                            sh '''
+                                ./mvnw clean verify sonar:sonar \
+                                -Dsonar.projectKey=bookmyplan \
+                                -Dsonar.host.url=${SONAR_HOST_URL} \
+                                -Dsonar.login=${SONAR_AUTH_TOKEN}
+                            '''
+                        }
+                    }
+
+                    // Wait for SonarQube analysis to complete and get Quality Gate status
+                    timeout(time: 10, unit: 'MINUTES') {
+                        waitForQualityGate abortPipeline: true
                     }
                 }
-
-                // Wait for Quality Gate
-                timeout(time: 10, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }    
+            }       
         }
 
 
